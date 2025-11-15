@@ -101,7 +101,8 @@ def get_vector_store(
     elif type.lower().startswith("chroma"):
         vector_store = Chroma.from_documents(documents=documents, embedding=embedding)
     elif type.lower().startswith("pinecone"):
-        vector_store = Pinecone.from_documents(documents=documents, embedding=embedding)
+        pass
+        # 작성 필요
     else:
         raise ValueError(f"Unsupported vector store type: {type}")
     
