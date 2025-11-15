@@ -1,179 +1,182 @@
-# CLAUDE.md
+# Whisky RAG Chatbot Project
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## 프로젝트 개요
 
-## Project Overview
+위스키 리뷰 정보를 기반으로 한 RAG(Retrieval Augmented Generation) 챗봇 구현 프로젝트입니다.
+히포위스키클럽의 고객 리뷰 데이터베이스를 활용하여, 사용자의 취향에 맞는 위스키를 추천하고 설명하는 AI 서비스를 개발합니다.
 
-This is a machine learning project template. It uses `uv` for Python package management and includes:
-- Core ML utilities in `src/my_ml/`
-- Streamlit demo application in `demo/`
-- Configuration-driven architecture with YAML configs in `configs/`
-- Jupyter notebook templates in `notebooks/`
-- Data pipeline structure with raw/intermediate/processed data directories
+## 배경
 
-## Environment Setup
+- 위스키 시장 침체: WhiskyStats 지수 기준 약 35.8% 하락 (357.94 → 229.77)
+- 오프라인 전문가 상담의 확장성 한계
+- 1,000개 고품질 리뷰를 활용한 AI 기반 맞춤형 추천 서비스 필요
 
-### Initial Development Setup
-```bash
-# Development environment (includes pre-commit hooks, black, isort)
-make init-dev
-# OR
-bash install.sh --dev
+## 과제 요구사항
 
-# Production environment
-make init
-# OR
-bash install.sh
+### Q1: 위스키 리뷰 데이터 벡터화 및 Vector Database 적재
 
-# View all available make commands
-make help
+**목표**: `whisky_reviews.csv` 데이터를 임베딩하여 Vector Database에 저장
+
+**구현 단계**:
+1. CSV 파일에서 데이터 로딩
+2. 결측치 확인 및 필터링/보간
+3. 임베딩 모델을 활용한 벡터화
+4. Vector DB(Pinecone)에 업로드
+
+**데이터 필드**:
+- 위스키 이름
+- 리뷰 링크
+- 향(nose)
+- 맛(flavor)
+- 피니쉬(finish)
+
+### Q2: RAG 기반 웹 챗봇 구현
+
+**목표**: 사용자 질문에 대해 관련 위스키 정보를 검색하고 LLM으로 답변 생성
+
+**구현 요소**:
+- 사용자 질문 임베딩
+- Vector DB에서 유사 문서 검색 (Retrieval)
+- 검색된 정보를 컨텍스트로 LLM에 전달
+- 최종 답변 생성 (Generation)
+- UI 프레임워크 활용 (Gradio, Reflex, Streamlit 등)
+
+### Q3: 챗봇 성능(정확도) 개선
+
+**목표**: `whisky_qnas.csv`의 20개 FAQ를 기준으로 답변 품질 향상
+
+**개선 방법** (자유롭게 적용):
+- Prompt Engineering
+- 임베딩 및 적재 방법 개선
+- 검색 알고리즘 개선 (하이브리드 검색, 리랭킹 등)
+- Retrieval 후 데이터 처리 과정 개선
+- RAG 파이프라인 최적화
+
+**평가**:
+- 제공된 20개 FAQ 외에 약 80개의 추가 테스트 질문 사용 예정
+- 성능 개선 정량화 시 가산점
+
+**참고 자료**:
+- [LangChain - Evaluating LLMs with OpenEvals](https://blog.langchain.dev/evaluating-llms-with-openevals/)
+- [Confident AI - RAG Evaluation Guide](https://docs.confident-ai.com/guides/guides-rag-evaluation)
+- [Qdrant - RAG Evaluation Guide](https://qdrant.tech/blog/rag-evaluation-guide/)
+- [Pinecone - RAG Evaluation](https://www.pinecone.io/learn/series/vector-databases-in-production-for-busy-engineers/rag-evaluation/)
+
+## 제출물
+
+1. **리포트** (1-3페이지)
+   - 프롬프트 설계
+   - 생성 로직
+   - 성능 개선 기법
+   - 평가 방법 및 채택 사유
+
+2. **Q1 코드**
+   - 데이터 로딩 → 임베딩 → Vector DB 저장 전체 파이프라인
+
+3. **Q2 코드**
+   - RAG 기반 챗봇 구현
+   - 예시 답변 시연 (스크린샷, 콘솔 로그)
+
+4. **Q3 코드**
+   - 성능 개선 적용 코드
+   - 정량적 평가 지표 (가점 요소)
+
+## 기술 스택 및 무료 API
+
+### 선택된 구현 스택
+
+이 프로젝트에서는 다음 기술 스택을 사용합니다:
+
+- **Framework**: LangChain (RAG 파이프라인 구축)
+- **Vector Database**: Pinecone (LangChain 통합)
+- **LLM**: Google Gemini 1.5 Flash-8B
+- **Embedding**: Google Gemini Embedding
+
+### Vector Database
+- [Pinecone Starter Plan](https://pinecone.io/) (무료)
+- LangChain Pinecone Integration: `langchain-pinecone`
+
+### LLM
+- [Google Gemini 1.5 Flash-8B](https://ai.google.dev/gemini-api/docs/models/gemini)
+- LangChain Google GenAI Integration: `langchain-google-genai`
+- 무료 할당량 제공
+
+### Embedding
+- [Google Gemini Embedding](https://ai.google.dev/gemini-api/docs/embeddings?hl=ko)
+- 모델: `models/text-embedding-004`
+- LangChain 통합 가능
+
+## 데이터 파일
+
+- `whisky_reviews.csv`: 1,000개 위스키 리뷰 (Q1)
+- `whisky_qnas.csv`: 20개 FAQ (Q3)
+
+## 프로젝트 구조 (예상)
+
+```
+rag-assignment/
+├── data/
+│   ├── whisky_reviews.csv
+│   └── whisky_qnas.csv
+├── notebooks/
+│   ├── 1.EDA.ipynb
+│   ├── 2.vectorization.ipynb
+│   └── 3.evaluation.ipynb
+├── src/
+│   ├── data_loader.py
+│   ├── embedding.py
+│   ├── vector_store.py
+│   ├── retriever.py
+│   ├── chatbot.py
+│   └── evaluation.py
+├── app/
+│   └── gradio_app.py (or streamlit_app.py)
+├── tests/
+├── requirements.txt
+├── README.md
+└── REPORT.md
 ```
 
-The project uses:
-- Python 3.12.9 (pinned version)
-- uv for dependency management
-- Virtual environment in `.venv/`
-- Always activate the virtual environment: `source .venv/bin/activate`
+## 개발 진행 순서
 
-### Environment Variables
-Before running the demo application, create environment files from templates:
-```bash
-cp .env.example .env
-cp .env.dev.example .env.dev
-```
+1. **EDA (Exploratory Data Analysis)**
+   - `whisky_reviews.csv` 데이터 탐색
+   - 결측치 패턴 분석
+   - 데이터 품질 확인
 
-### Demo Application
-```bash
-cd demo
-streamlit run main.py
-```
+2. **Q1: 벡터화 파이프라인 구축**
+   - 데이터 전처리 및 필터링
+   - 임베딩 모델 선택 및 벡터화
+   - Pinecone 설정 및 업로드
 
-The demo uses a multi-page Streamlit app with login/logout functionality and navigation to multiple application sections.
+3. **Q2: RAG 챗봇 구현**
+   - Retrieval 로직 구현
+   - LLM 통합
+   - UI 개발 (Gradio/Streamlit)
 
-**Default login credentials** (defined in [demo/page_utils.py](demo/page_utils.py)):
-- Username: `admin`
-- Password: `admin`
+4. **Q3: 성능 개선 및 평가**
+   - Baseline 성능 측정
+   - 개선 기법 적용
+   - 정량적 평가 수행
 
-These are hardcoded for development and should be replaced with environment variables before deployment.
+5. **리포트 작성**
+   - 구현 과정 정리
+   - 결과 분석
+   - 개선 사항 문서화
 
-## Code Quality & Formatting
+## 주의사항
 
-### Pre-commit Hooks
-Pre-commit is configured with:
-- Ruff (formatting and linting, line-length: 105)
-- trailing-whitespace, end-of-file-fixer, mixed-line-ending
-- check-added-large-files (max 30MB)
-- requirements-txt-fixer
-- add-trailing-comma
+- Q&A 내용을 직접 prompt에 하드코딩하지 말 것
+- 언어/프레임워크 제약 없음
+- AI 코딩 도구 사용 가능 (Copilot, ChatGPT 등)
+- 모든 단계를 완벽히 구현할 필요 없음
+- 문제 해결 과정과 사고방식이 중요
 
-Pre-commit hooks run automatically on commit when using `--dev` setup.
+## 연락처
 
-### Manual Formatting
-```bash
-make format  # Runs ruff format
-```
+- 문의: people@vessl.ai
+- API usage 부족 시 위 이메일로 연락
 
-**Important**: Always maintain line-length of 105 characters for Ruff formatting.
+## 참고 링크
 
-## Architecture
-
-### Directory Structure
-```
-src/my_ml/            # Main package
-  utils/              # Utility modules
-    config_loader.py  # YAML config loading
-    path.py           # Path constants for project structure
-    settings.py       # Random seed and reproducibility utilities
-configs/              # YAML configuration files
-  data.yaml           # Data paths configuration (commented examples)
-  feature.yaml        # Feature engineering configs
-  model.yaml          # Model configurations
-  train.yaml          # Training pipeline configs
-  configs.py          # Config loading for demo (uses AWS Secrets Manager)
-demo/                 # Streamlit demo application
-  main.py             # Main entry point with navigation
-  page_utils.py       # Login/logout utilities
-  home/, app1/, app2/ # Application pages
-data/                 # Data directory (git-ignored)
-  raw/                # Raw data
-  intermediate/       # Intermediate processing results
-  processed/          # Final processed datasets
-notebooks/            # Jupyter notebooks
-  template.ipynb      # Notebook template
-```
-
-### Configuration System
-
-The project uses a centralized path management system ([src/my_ml/utils/path.py](src/my_ml/utils/path.py)) that defines all project paths relative to the repository root:
-- `REPO_ROOT`: Repository root (3 levels up from utils: `Path(__file__).parents[3]`)
-- Base paths: `CONFIG_PATH`, `DATA_PATH`, `LOG_PATH`, `NOTEBOOK_PATH`, `SOURCE_PATH`, `PACKAGE_PATH`
-- Data subdirectories: `RAW_DATA_PATH`, `INTERMEDIATE_DATA_PATH`, `PROCESSED_DATA_PATH`
-- Config file paths: `DATA_CONFIG_PATH`, `FEATURE_CONFIG_PATH`, `MODEL_CONFIG_PATH`
-
-**Important**: All paths are computed relative to REPO_ROOT, ensuring the code works regardless of where it's imported from.
-
-Use `load_config(path)` from `my_ml.utils.config_loader` to load YAML configurations:
-```python
-from my_ml.utils.config_loader import load_config
-from my_ml.utils.path import DATA_CONFIG_PATH
-
-config = load_config(DATA_CONFIG_PATH)
-```
-
-### Demo Application Architecture
-
-The demo application ([demo/main.py](demo/main.py)) uses Streamlit's multi-page navigation with:
-- Session-based login state management (`st.session_state["login"]`)
-- Page routing based on login status (shows login page when not authenticated)
-- AWS Secrets Manager integration for configuration ([configs/configs.py](configs/configs.py))
-- Uses `.env` and `.env.dev` files for environment-specific settings
-- Profile-based configuration: checks `APP_PROFILE` environment variable to determine which .env file to load
-
-**Security Note**: The demo config loader uses `eval()` on AWS Secrets Manager responses ([configs/configs.py:39](configs/configs.py#L39)), which should be reviewed for security considerations. Consider using `json.loads()` instead.
-
-### Notebook Template Structure
-
-The Jupyter notebook template ([notebooks/template.ipynb](notebooks/template.ipynb)) includes:
-- Author name and date fields (initial issue and last update)
-- Revision history section
-- Automatic `.env` loading with `load_dotenv()`
-
-Use this template as the starting point for all new notebooks.
-
-## Dependencies
-
-This project includes extensive ML/AI dependencies:
-- ML frameworks: torch, lightning, scikit-learn, xgboost, statsmodels
-- LLM/GenAI: langchain, langgraph, litellm, langchain-aws, traceloop-sdk
-- Data processing: pandas, polars, numpy, pyarrow
-- Cloud services: boto3, azure-cognitiveservices-speech, google-cloud-aiplatform
-- APIs: fastapi, streamlit
-- Database: pymongo, motor, sqlalchemy, pg8000, redis, opensearch-py, pyvespa
-- Observability: opentelemetry instrumentation, prometheus-client
-- Optimization: optuna
-- Visualization: matplotlib, seaborn, shap, streamlit-aggrid
-- Audio/Video: amazon-transcribe, azure-cognitiveservices-speech
-
-When adding new dependencies:
-```bash
-uv add <package>  # Adds to pyproject.toml and syncs
-```
-
-## Development Workflow
-
-1. Activate the virtual environment: `source .venv/bin/activate`
-2. Pre-commit hooks run automatically on commit (if using `--dev` setup)
-3. Configuration changes go in YAML files under `configs/`
-4. New utilities should be added to `src/my_ml/utils/`
-5. Data files are git-ignored; only code and configs are versioned
-6. Use the notebook template for new Jupyter notebooks
-7. Import utilities using `from my_ml.utils import ...` after environment activation
-
-### Reproducibility
-
-Use `set_random_seed()` from [src/my_ml/utils/settings.py](src/my_ml/utils/settings.py) to ensure reproducible results:
-```python
-from my_ml.utils.settings import set_random_seed
-
-set_random_seed(random_seed=42, use_torch=True)  # Sets seeds for random, numpy, and optionally torch
-```
+- [WhiskyStats Index Monitor](https://www.whiskystats.com/index-monitor/index/1)
