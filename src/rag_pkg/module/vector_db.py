@@ -104,18 +104,6 @@ def get_vector_store(
     Raises:
         ValueError: 지원되지 않는 벡터 스토어 유형이 입력된 경우 발생.
         ValueError: Pinecone 선택 시 index_name이 제공되지 않은 경우 발생.
-
-    Examples:
-        >>> # FAISS 벡터 스토어 생성
-        >>> vector_store = get_vector_store(documents, embedding, type="faiss")
-
-        >>> # Pinecone 벡터 스토어 생성
-        >>> vector_store = get_vector_store(
-        ...     documents,
-        ...     embedding,
-        ...     type="pinecone",
-        ...     index_name="whisky-reviews"
-        ... )
     """
     if type.lower().startswith("faiss"):
         vector_store = FAISS.from_documents(documents=documents, embedding=embedding)
