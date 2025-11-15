@@ -3005,6 +3005,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "streamlit" },
+    { name = "tqdm" },
 ]
 
 [package.metadata]
@@ -3023,6 +3024,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "streamlit", specifier = ">=1.51.0" },
+    { name = "tqdm", specifier = ">=4.67.1" },
 ]
 
 [[package]]
