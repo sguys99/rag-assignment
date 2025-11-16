@@ -114,20 +114,29 @@ def get_vector_store(
     elif type.lower().startswith("pinecone"):
         if index_name is None:
             raise ValueError("Pinecone 벡터 스토어 사용 시 'index_name' 파라미터가 필수입니다.")
-        
+
         pc = Pinecone()
-        if not pc.has_index(index_name):
+        index_exists = pc.has_index(index_name)
+
+        if not index_exists:
+            # 인덱스가 없으면 새로 생성
             pc.create_index(
                 name=index_name,
-                dimension = 1536, #??
-                metric="cosine", #??
-                spec=ServerlessSpec(cloud="aws", region="us-east-1"), #??
+                dimension=1536,  # Google text-embedding-004 dimension
+                metric="cosine",
+                spec=ServerlessSpec(cloud="aws", region="us-east-1"),
             )
-            
+
         index = pc.Index(index_name)
 
         vector_store = PineconeVectorStore(index=index, embedding=embedding)
-        vector_store.add_documents(documents=documents)
+
+        # 인덱스가 새로 생성된 경우에만 문서 추가
+        if not index_exists:
+            vector_store.add_documents(documents=documents)
+            print(f"✓ Pinecone 인덱스 '{index_name}'에 {len(documents)}개 문서 추가 완료")
+        else:
+            print(f"✓ 기존 Pinecone 인덱스 '{index_name}' 사용 (문서 추가 생략)")
 
     else:
         raise ValueError(f"Unsupported vector store type: {type}")
