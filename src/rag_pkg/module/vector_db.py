@@ -85,6 +85,7 @@ def get_vector_store(
     embedding: Embeddings,
     type: str = "faiss",
     index_name: str = "whisky-reviews",
+    dimension:int = 1024
 ) -> Union[FAISS, Chroma, PineconeVectorStore]:
     """
     주어진 Document 객체 목록과 임베딩을 사용하여 지정된 유형의 벡터 스토어를 반환하는 함수.
@@ -122,7 +123,7 @@ def get_vector_store(
             # 인덱스가 없으면 새로 생성
             pc.create_index(
                 name=index_name,
-                dimension=1024,  # Google text-embedding-004 dimension
+                dimension=dimension,
                 metric="cosine",
                 spec=ServerlessSpec(cloud="aws", region="us-east-1"),
             )
