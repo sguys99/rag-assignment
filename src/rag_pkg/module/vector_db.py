@@ -122,7 +122,7 @@ def get_vector_store(
             # 인덱스가 없으면 새로 생성
             pc.create_index(
                 name=index_name,
-                dimension=1536,  # Google text-embedding-004 dimension
+                dimension=1024,  # Google text-embedding-004 dimension
                 metric="cosine",
                 spec=ServerlessSpec(cloud="aws", region="us-east-1"),
             )
