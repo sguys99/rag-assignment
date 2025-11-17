@@ -1,8 +1,5 @@
-import base64
-import os
 import re
 import shutil
-from io import BytesIO
 from time import time
 from typing import Any
 
@@ -10,13 +7,11 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 from langchain_classic.callbacks.base import BaseCallbackHandler
-from langchain_classic.embeddings import CacheBackedEmbeddings
 from langchain_classic.storage import LocalFileStore
 from langchain_community.vectorstores import FAISS
 
 from rag_pkg.module.models import get_embedding
-from rag_pkg.module.vector_db import get_vector_store
-from rag_pkg.utils.path import CACHE_EMBEDDING_PATH, CACHE_FILE_PATH, DEMO_IMG_PATH
+from rag_pkg.utils.path import DEMO_IMG_PATH
 
 load_dotenv()
 
@@ -25,15 +20,6 @@ ai_avartar = DEMO_IMG_PATH / "vessel-icon.png"
 
 
 def load_image(image_path: str) -> bytes:
-    """
-    주어진 경로에서 이미지를 읽어와 바이트 형태로 반환하는 함수.
-
-    Args:
-        image_path (str): 이미지 파일의 경로.
-
-    Returns:
-        bytes: 이미지 파일의 바이트 데이터.
-    """
     with open(image_path, "rb") as image_file:
         return image_file.read()
 
@@ -88,127 +74,12 @@ class ChatCallbackHandler(BaseCallbackHandler):
         self.message_box.markdown(self.message)
 
 
-# @st.cache_resource(show_spinner="Embedding file...")
-# def embed_file_with_cache(
-#     file,
-#     file_content: bytes,
-#     embedding_model: str = "text-embedding-3-large",
-# ):
-#     """
-#     파일을 임베딩하고 리트리버를 생성하는 함수.
-
-#     주어진 파일 데이터를 임베딩하고, 이를 기반으로 검색 가능한 리트리버 객체를 생성.
-#     PDF 또는 DOCX 파일을 지원하며, 문서를 지정된 크기로 분할한 후, 지정된 임베딩 모델을 사용해 벡터 임베딩을 생성.
-#     생성된 임베딩은 캐시에 저장되며, 이를 사용하여 FAISS 벡터스토어와 리트리버를 생성.
-
-#     Args:
-#         file: 업로드된 파일 객체.
-#         file_content (bytes): 업로드된 파일의 바이트 데이터.
-#         file_type (str, optional): 파일 유형. "pdf" 또는 "docx"로 지정. 기본값은 "pdf".
-#         chunk_size (int, optional): 문서를 분할할 때 사용하는 청크의 크기. 기본값은 1000.
-#         chunk_overlap (int, optional): 문서를 분할할 때 청크 간 중첩되는 문자 수. 기본값은 200.
-#         embedding_model (str, optional): 사용할 임베딩 모델의 이름. 기본값은 "text-embedding-3-large".
-#         base_url (str, optional): Locall LLM 사용시 서버 주소. 기본값은 "10.99.15.72:11434"
-
-#     Returns:
-#         retriever: 검색 가능한 리트리버 객체.
-#     """
-#     file_path = CACHE_FILE_PATH / f"{file.name}"
-
-#     with open(file_path, "wb") as f:
-#         f.write(file_content)
-
-#     cache_dir = LocalFileStore(CACHE_EMBEDDING_PATH / f"{file.name}")
-#     splitter = RecursiveCharacterTextSplitter(
-#         chunk_size=chunk_size,
-#         chunk_overlap=chunk_overlap,
-#     )
-#     if file_type == ".pdf":
-#         loader = PyPDFLoader(file_path)
-#     elif file_type in [".docx", ".docc"]:
-#         loader = Docx2txtLoader(file_path)
-#     docs = loader.load_and_split(text_splitter=splitter)
-#     embeddings = get_embedding(model=embedding_model, base_url=base_url)
-#     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
-#     vectorstore = FAISS.from_documents(docs, cached_embeddings)
-#     retriever = vectorstore.as_retriever()
-#     return retriever
-
-
-# @st.cache_resource(show_spinner="Embedding file...")
-# def embed_file(
-#     file,
-#     file_content: bytes,
-#     file_type: str = "pdf",
-#     chunk_size: int = 1000,
-#     chunk_overlap: int = 200,
-#     embedding_model: str = "text-embedding-3-large",
-#     base_url: str = "10.99.16.87:11434",
-# ):
-#     """
-#     파일을 임베딩하고 리트리버를 생성하는 함수.
-
-#     주어진 파일 데이터를 임베딩하고, 이를 기반으로 검색 가능한 리트리버 객체를 생성.
-#     PDF 또는 DOCX 파일을 지원하며, 문서를 지정된 크기로 분할한 후, 지정된 임베딩 모델을 사용해 벡터 임베딩을 생성.
-#     이를 사용하여 FAISS 벡터스토어와 리트리버를 생성.
-
-#     Args:
-#         file: 업로드된 파일 객체.
-#         file_content (bytes): 업로드된 파일의 바이트 데이터.
-#         file_type (str, optional): 파일 유형. "pdf" 또는 "docx"로 지정. 기본값은 "pdf".
-#         chunk_size (int, optional): 문서를 분할할 때 사용하는 청크의 크기. 기본값은 1000.
-#         chunk_overlap (int, optional): 문서를 분할할 때 청크 간 중첩되는 문자 수. 기본값은 200.
-#         embedding_model (str, optional): 사용할 임베딩 모델의 이름. 기본값은 "text-embedding-3-large".
-#         base_url (str, optional): Locall LLM 사용시 서버 주소. 기본값은 "10.99.15.72:11434"
-
-#     Returns:
-#         retriever: 검색 가능한 리트리버 객체.
-#     """
-#     os.makedirs(CACHE_FILE_PATH, exist_ok=True)
-#     file_path = CACHE_FILE_PATH / f"{file.name}"
-
-#     with open(file_path, "wb") as f:
-#         f.write(file_content)
-
-#     splitter = get_splitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, type="recursive")
-
-#     if file_type == ".pdf":
-#         loader = PyPDFLoader(file_path)
-#     elif file_type in [".docx", ".docc"]:
-#         loader = Docx2txtLoader(file_path)
-
-#     docs = loader.load_and_split(text_splitter=splitter)
-#     embeddings = get_embedding(model=embedding_model, base_url=base_url)
-#     vectorstore = get_vector_store(docs, embeddings, type="faiss")
-#     retriever = vectorstore.as_retriever()
-
-#     if os.path.exists(file_path):
-#         os.remove(file_path)
-
-#     return retriever
-
-
 @st.cache_resource(show_spinner="Loading vectorstore...")
 def load_retriver(
     db_path: str,
     embedding_model="gemini-embedding-001",
     retriever_k: int = 4,
 ):
-    """
-    로컬에서 저장된 벡터스토어를 불러와 리트리버를 생성하는 함수.
-
-    주어진 경로에 있는 벡터스토어를 로드하고, 지정된 임베딩 모델을 사용해 검색 가능한 리트리버 객체를 생성.
-    리트리버는 유사성 검색 방식을 사용하며, 검색 결과로 반환되는 문서의 수는 `retriever_k` 값으로 설정.
-
-    Args:
-        db_path (str): 로컬 벡터스토어가 저장된 경로.
-        embedding_model (str, optional): 사용할 임베딩 모델의 이름. 기본값은 "text-embedding-3-large".
-        retriever_k (int, optional): 검색 시 반환할 문서의 최대 개수. 기본값은 4.
-        base_url (str, optional): Locall LLM 사용시 서버 주소. 기본값은 "10.99.15.72:11434"
-
-    Returns:
-        retriever: 검색 가능한 리트리버 객체.
-    """
     embeddings = get_embedding(model=embedding_model)
     vectorstore = FAISS.load_local(db_path, embeddings=embeddings, allow_dangerous_deserialization=True)
     retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": retriever_k})
@@ -217,16 +88,6 @@ def load_retriver(
 
 @st.dialog("로그 삭제")
 def delete_log(selected_log_path: str) -> None:
-    """
-    선택한 로그를 삭제하는 함수.
-
-    사용자는 주어진 경로에 있는 로그 삭제를 확인.
-    삭제 버튼을 클릭하면 지정된 경로의 로그가 삭제.
-    삭제 과정에서 오류가 발생할 경우, 오류 메시지가 표시.
-
-    Args:
-        selected_log_path (str): 삭제할 로그가 위치한 파일 경로.
-    """
     st.write(f"`{selected_log_path.as_posix().split('/')[-1]}`")
     st.write("위 경로의 설정을 삭제합니까?")
     if st.button("삭제"):
@@ -241,28 +102,10 @@ def delete_log(selected_log_path: str) -> None:
 
 
 def save_message(message: str, role: str) -> None:
-    """
-    메시지를 세션 상태에 저장하는 함수.
-
-    Args:
-        message (str): 저장할 메시지 내용.
-        role (str): 메시지 작성자의 역할 ("ai" 또는 "human").
-    """
     st.session_state["messages"].append({"message": message, "role": role})
 
 
 def send_message(message: str, role: str, save: bool = True) -> None:
-    """
-    채팅 인터페이스에 메시지를 표시하고 선택적으로 저장하는 함수.
-
-    메시지를 채팅 UI에 표시하고, save 매개변수가 True인 경우 세션 상태에도 저장.
-    각 메시지는 역할에 따라 다른 아바타 이미지와 함께 표시.
-
-    Args:
-        message (str): 표시할 메시지 내용.
-        role (str): 메시지 작성자의 역할 ("ai" 또는 "human").
-        save (bool, optional): 메시지를 세션 상태에 저장할지 여부. 기본값은 True.
-    """
     avatar_image = load_image(ai_avartar if role == "ai" else human_avatar)
 
     with st.chat_message(role, avatar=avatar_image):
@@ -273,42 +116,17 @@ def send_message(message: str, role: str, save: bool = True) -> None:
 
 
 def pain_history() -> None:
-    """
-    세션 상태에 저장된 모든 대화 내역을 화면에 표시하는 함수.
-
-    세션 상태의 "messages" 리스트에서 각 메시지를 가져와
-    채팅 인터페이스에 순서대로 표시.
-    """
     for message in st.session_state["messages"]:
         send_message(message["message"], message["role"], save=False)
 
 
 @st.cache_data(show_spinner=False)
 def read_file_data(file: Any) -> pd.DataFrame:
-    """
-    파일 데이터를 읽어 DataFrame으로 변환하는 함수.
-
-    Args:
-        file (Any): 업로드된 파일 객체. 보통 Streamlit의 file_uploader로 받은 파일.
-
-    Returns:
-        pd.DataFrame: CSV 데이터를 담은 pandas DataFrame.
-    """
     df = pd.read_csv(file)
     return df
 
 
 def check_korean(text):
-    """
-    RAG, Agent 설정 이름에 한글 포함 여부를 체크하는 함수.
-
-    Args:
-        text (str): 입력한 설정 이름.
-
-    Returns:
-        bool: 입력한 이름에 한글이 포함되면 True를 반환하고 한글이 포함되어있지 않으면 False를 반환
-
-    """
     p = re.compile("[ㄱ-힣]")
     r = p.search(text)
     if r is None:

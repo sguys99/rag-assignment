@@ -9,45 +9,10 @@ from langchain_core.documents import Document
 
 
 def format_docs(docs: List[Document]) -> str:
-    """
-    문서 목록에서 각 문서의 페이지 콘텐츠를 연결하여 하나의 문자열로 반환하는 함수.
-
-    Args:
-        docs (List[Document]): Langchain Document 인스턴스로 구성된 리스트.
-
-    Returns:
-        str: 각 문서의 페이지 콘텐츠가 두 줄 간격으로 연결된 하나의 문자열.
-    """
     return "\n\n".join(document.page_content for document in docs)
 
 
 def format_docs_with_meta(docs: List[Document]) -> str:
-    """
-    문서 목록에서 각 문서의 페이지 콘텐츠와 메타데이터를 포함하여 하나의 문자열로 반환하는 함수.
-
-    Args:
-        docs (List[Document]): Langchain Document 인스턴스로 구성된 리스트.
-
-    Returns:
-        str: 각 문서의 페이지 콘텐츠와 메타데이터가 포함되어 연결된 하나의 문자열.
-
-    Examples:
-        >>> docs = retriever.get_relevant_documents("fruity whisky")
-        >>> formatted = format_docs_with_meta(docs)
-        >>> print(formatted)
-        [Whisky: Glenfiddich 12 Year Old]
-        Link: https://...
-        Tags: fruity, smooth
-        Nose Score: 85, Taste Score: 87, Finish Score: 84
-
-        Review Content:
-        This whisky has a fruity nose...
-
-        ---
-
-        [Whisky: Macallan 18]
-        ...
-    """
     formatted_docs = []
 
     for doc in docs:
@@ -98,23 +63,7 @@ def save_rag_configs(
     vectorstore_type: str = "FAISS",
     embedding_type: str = "gemini-embedding-001",
 ) -> None:
-    """
-    RAG(Retrieval-Augmented Generation) 설정을 YAML 파일로 저장.
-
-    Args:
-        save_path (str): 설정 파일을 저장할 경로.
-        document_format (str): 문서 형식 (예: PDF, DOCX).
-        documents (List[str]): 처리할 문서 목록.
-        text_splitter_type (str): 사용할 텍스트 분할기 유형.
-        chunk_size (int): 분할할 텍스트 청크 크기.
-        chunk_overlap (int): 청크 간 중첩되는 문자 수.
-        loader_type (str, optional): 문서 로더 유형 (기본값: "directory").
-        vectorstore_type (str, optional): 벡터 스토어 유형 (기본값: "FAISS").
-        embedding_type (str, optional): 임베딩 모델 유형 (기본값: "text-embedding-3-large").
-
-    Returns:
-        None
-    """
+    
     config = {
         "document_format": document_format,
         "document": document,
@@ -127,16 +76,6 @@ def save_rag_configs(
 
 
 def check_incomplete_logs(base_path: str, required_files: List[str]) -> List[str]:
-    """
-    지정된 경로(base_path) 내에서 필수 파일(required_files)이 모두 존재하지 않는 폴더들을 찾아 반환하는 함수.
-
-    Args:
-        base_path (str): 검색할 기본 경로.
-        required_files (List[str]): 각 폴더 내에 존재해야 하는 파일의 이름 목록.
-
-    Returns:
-        List[str]: 모든 필수 파일이 없는 폴더명들의 리스트.
-    """
 
     return [
         f
@@ -147,16 +86,7 @@ def check_incomplete_logs(base_path: str, required_files: List[str]) -> List[str
 
 
 def delete_incomplete_logs(base_path: str, required_files: List[str]) -> None:
-    """
-    지정된 경로(base_path) 내에서 필수 파일(required_files)이 모두 존재하지 않는 폴더들을 찾아 삭제하는 함수.
 
-    Args:
-        base_path (str): 검색할 기본 경로.
-        required_files (List[str]): 각 폴더 내에 존재해야 하는 파일의 이름 목록.
-
-    Returns:
-        None
-    """
     incomplete_dirs = check_incomplete_logs(base_path, required_files)
 
     for dir_name in incomplete_dirs:

@@ -1,14 +1,8 @@
-import gc
 import os
-import time
-from datetime import datetime
-import yaml
 import streamlit as st
 from dotenv import load_dotenv
 from function_utils import (
-    delete_log, 
     read_file_data, 
-    check_korean, 
     load_image, 
     pain_history,
     send_message,
@@ -16,13 +10,10 @@ from function_utils import (
     ChatCallbackHandler)
 from langchain_core.prompts import load_prompt
 from langchain_classic.memory import ConversationBufferWindowMemory
-from rag_pkg.utils.path import LOG_PATH, PROMPT_CONFIG_PATH, DEMO_IMG_PATH
+from rag_pkg.utils.path import LOG_PATH, DEMO_IMG_PATH
 from rag_pkg.utils.config_loader import dump_yaml, load_yaml
-from rag_pkg.module.prompts import build_qa_prompt, save_fewshot_prompt, save_prompt
 from rag_pkg.utils.rag_utils import delete_incomplete_logs, format_docs_with_meta
-from rag_pkg.module.preprocess import preprocess_for_rag
-from rag_pkg.module.vector_db import load_documents, get_vector_store
-from rag_pkg.module.models import get_embedding, get_llm
+from rag_pkg.module.models import get_llm
 from rag_pkg.chains import build_simple_chain
 
 load_dotenv()

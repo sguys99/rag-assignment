@@ -1,0 +1,5 @@
+document: whisky_reviews.csv
+document_format: csv
+embedding: gemini-embedding-001
+vectorstore:
+  type: FAISS

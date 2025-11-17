@@ -1,22 +1,6 @@
 import pandas as pd
 
 def filter_valid_reviews(df: pd.DataFrame, min_comments: int = 2) -> pd.DataFrame:
-    """
-    RAG에 적합한 유효한 위스키 리뷰만 필터링합니다.
-    
-    Parameters:
-    -----------
-    df : pd.DataFrame
-        원본 위스키 리뷰 데이터프레임
-    min_comments : int, default=2
-        최소 필요한 Comment 개수 (Nose/Taste/Finish 중)
-    
-    Returns:
-    --------
-    pd.DataFrame
-        필터링된 데이터프레임
-
-    """
     df_filtered = df.copy()
     
     essential_mask = (
@@ -44,30 +28,6 @@ def filter_valid_reviews(df: pd.DataFrame, min_comments: int = 2) -> pd.DataFram
 
 
 def create_document_text(row: pd.Series) -> str:
-    """
-    각 위스키 리뷰를 RAG용 단일 문서 텍스트로 결합합니다.
-
-    Parameters:
-    -----------
-    row : pd.Series
-        위스키 리뷰 데이터의 한 행
-
-    Returns:
-    --------
-    str
-        임베딩에 사용할 구조화된 텍스트
-
-    Format:
-    -------
-    위스키 이름: {name}
-    태그: {tags}
-
-    향(Nose): {nose_comment}
-
-    맛(Taste): {taste_comment}
-
-    피니쉬(Finish): {finish_comment}
-    """
     parts = [f"위스키 이름: {row['Whisky Name']}"]
 
     if pd.notna(row['Tags']) and row['Tags'].strip():
@@ -108,27 +68,6 @@ def preprocess_for_rag(
     min_comments: int = 2,
     add_document_text: bool = True
 ) -> pd.DataFrame:
-    """
-    위스키 리뷰 데이터를 RAG 시스템에 사용하기 위해 전처리합니다.
-
-    이 함수는 다음 단계를 수행합니다:
-    1. 유효한 리뷰만 필터링 (filter_valid_reviews)
-    2. RAG용 문서 텍스트 생성 (create_document_text)
-
-    Parameters:
-    -----------
-    df : pd.DataFrame
-        원본 위스키 리뷰 데이터프레임
-    min_comments : int, default=2
-        최소 필요한 Comment 개수 (Nose/Taste/Finish 중)
-    add_document_text : bool, default=True
-        document_text 컬럼 추가 여부
-
-    Returns:
-    --------
-    pd.DataFrame
-        전처리된 데이터프레임 (document_text 컬럼 포함)
-    """
     # 1. 유효한 리뷰만 필터링
     filtered_df = filter_valid_reviews(df, min_comments=min_comments)
 

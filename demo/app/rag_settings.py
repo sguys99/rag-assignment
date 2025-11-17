@@ -13,7 +13,7 @@ from rag_pkg.module.prompts import build_qa_prompt, save_fewshot_prompt, save_pr
 from rag_pkg.utils.rag_utils import delete_incomplete_logs, save_rag_configs
 from rag_pkg.module.preprocess import preprocess_for_rag
 from rag_pkg.module.vector_db import load_documents, get_vector_store
-from rag_pkg.module.models import get_embedding, get_llm
+from rag_pkg.module.models import get_embedding
 
 load_dotenv()
 

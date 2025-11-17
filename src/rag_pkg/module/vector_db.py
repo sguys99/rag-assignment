@@ -10,36 +10,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def load_documents(df: pd.DataFrame, document_text_col: str = 'document_text') -> List[Document]:
-    """
-    전처리된 데이터프레임을 LangChain Document 리스트로 변환합니다.
-
-    Parameters:
-    -----------
-    df : pd.DataFrame
-        전처리된 위스키 리뷰 데이터프레임 (document_text 컬럼 포함)
-    document_text_col : str, default='document_text'
-        Document의 page_content로 사용할 컬럼명
-
-    Returns:
-    --------
-    List[Document]
-        LangChain Document 객체 리스트
-        - page_content: document_text 내용
-        - metadata: Whisky Name, Link 등 기타 정보
-
-    Examples:
-    ---------
-    >>> df = preprocess_for_rag(reviews_df, min_comments=2)
-    >>> documents = load_documents(df)
-    >>> print(len(documents))  # df의 행 수와 동일
-    >>> print(documents[0].page_content)  # document_text 내용
-    >>> print(documents[0].metadata)  # {'whisky_name': '...', 'link': '...', ...}
-
-    Notes:
-    ------
-    - 원본 DataFrame의 행 수와 반환된 Document 리스트의 길이가 동일합니다.
-    - 각 Document의 metadata에는 Whisky Name, Link, Tags, Score 정보가 포함됩니다.
-    """
     if document_text_col not in df.columns:
         raise ValueError(f"'{document_text_col}' 컬럼이 데이터프레임에 존재하지 않습니다.")
 
@@ -87,25 +57,6 @@ def get_vector_store(
     index_name: str = "whisky-reviews",
     dimension:int = 1024
 ) -> Union[FAISS, Chroma, PineconeVectorStore]:
-    """
-    주어진 Document 객체 목록과 임베딩을 사용하여 지정된 유형의 벡터 스토어를 반환하는 함수.
-
-    Args:
-        documents (List[Document]): 임베딩을 생성할 Document 객체 목록.
-        embedding (Embeddings): 사용할 임베딩 모델.
-        type (str, optional): 생성할 벡터 스토어의 유형. 기본값은 'faiss'.
-            - "faiss": FAISS 벡터 스토어
-            - "chroma": Chroma 벡터 스토어
-            - "pinecone": Pinecone 벡터 스토어 (index_name 필수)
-        index_name (str, optional): Pinecone 인덱스 이름. Pinecone 사용 시 필수.
-
-    Returns:
-        Union[FAISS, Chroma, PineconeVectorStore]: 지정된 유형의 벡터 스토어 객체를 반환.
-
-    Raises:
-        ValueError: 지원되지 않는 벡터 스토어 유형이 입력된 경우 발생.
-        ValueError: Pinecone 선택 시 index_name이 제공되지 않은 경우 발생.
-    """
     if type.lower().startswith("faiss"):
         vector_store = FAISS.from_documents(documents=documents, embedding=embedding)
 
