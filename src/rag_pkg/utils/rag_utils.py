@@ -91,46 +91,75 @@ def format_docs_with_meta(docs: List[Document]) -> str:
     return "\n\n---\n\n".join(formatted_docs)
 
 
-# def save_rag_configs(
-#     save_path: str,
-#     document_format: str,
-#     documents: List[str],
-#     text_splitter_type: str,
-#     chunk_size: int,
-#     chunk_overlap: int,
-#     loader_type: str = "directory",
-#     vectorstore_type: str = "FAISS",
-#     embedding_type: str = "text-embedding-3-large",
-# ) -> None:
-#     """
-#     RAG(Retrieval-Augmented Generation) 설정을 YAML 파일로 저장.
+def save_rag_configs(
+    save_path: str,
+    document_format: str,
+    document: List[str],
+    vectorstore_type: str = "FAISS",
+    embedding_type: str = "gemini-embedding-001",
+) -> None:
+    """
+    RAG(Retrieval-Augmented Generation) 설정을 YAML 파일로 저장.
 
-#     Args:
-#         save_path (str): 설정 파일을 저장할 경로.
-#         document_format (str): 문서 형식 (예: PDF, DOCX).
-#         documents (List[str]): 처리할 문서 목록.
-#         text_splitter_type (str): 사용할 텍스트 분할기 유형.
-#         chunk_size (int): 분할할 텍스트 청크 크기.
-#         chunk_overlap (int): 청크 간 중첩되는 문자 수.
-#         loader_type (str, optional): 문서 로더 유형 (기본값: "directory").
-#         vectorstore_type (str, optional): 벡터 스토어 유형 (기본값: "FAISS").
-#         embedding_type (str, optional): 임베딩 모델 유형 (기본값: "text-embedding-3-large").
+    Args:
+        save_path (str): 설정 파일을 저장할 경로.
+        document_format (str): 문서 형식 (예: PDF, DOCX).
+        documents (List[str]): 처리할 문서 목록.
+        text_splitter_type (str): 사용할 텍스트 분할기 유형.
+        chunk_size (int): 분할할 텍스트 청크 크기.
+        chunk_overlap (int): 청크 간 중첩되는 문자 수.
+        loader_type (str, optional): 문서 로더 유형 (기본값: "directory").
+        vectorstore_type (str, optional): 벡터 스토어 유형 (기본값: "FAISS").
+        embedding_type (str, optional): 임베딩 모델 유형 (기본값: "text-embedding-3-large").
 
-#     Returns:
-#         None
-#     """
-#     config = {
-#         "document_format": document_format,
-#         "documents": documents,
-#         "loader": {"type": loader_type},
-#         "text_splitter": {
-#             "type": text_splitter_type,
-#             "chunk_size": chunk_size,
-#             "chunk_overlap": chunk_overlap,
-#         },
-#         "vectorstore": {"type": vectorstore_type},
-#         "embedding": embedding_type,
-#     }
+    Returns:
+        None
+    """
+    config = {
+        "document_format": document_format,
+        "document": document,
+        "vectorstore": {"type": vectorstore_type},
+        "embedding": embedding_type,
+    }
 
-#     with open(save_path, "w") as file:
-#         yaml.dump(config, file, default_flow_style=False)
+    with open(save_path, "w") as file:
+        yaml.dump(config, file, default_flow_style=False)
+
+
+def check_incomplete_logs(base_path: str, required_files: List[str]) -> List[str]:
+    """
+    지정된 경로(base_path) 내에서 필수 파일(required_files)이 모두 존재하지 않는 폴더들을 찾아 반환하는 함수.
+
+    Args:
+        base_path (str): 검색할 기본 경로.
+        required_files (List[str]): 각 폴더 내에 존재해야 하는 파일의 이름 목록.
+
+    Returns:
+        List[str]: 모든 필수 파일이 없는 폴더명들의 리스트.
+    """
+
+    return [
+        f
+        for f in os.listdir(base_path)
+        if os.path.isdir(os.path.join(base_path, f))
+        and not all(os.path.exists(os.path.join(base_path, f, file)) for file in required_files)
+    ]
+
+
+def delete_incomplete_logs(base_path: str, required_files: List[str]) -> None:
+    """
+    지정된 경로(base_path) 내에서 필수 파일(required_files)이 모두 존재하지 않는 폴더들을 찾아 삭제하는 함수.
+
+    Args:
+        base_path (str): 검색할 기본 경로.
+        required_files (List[str]): 각 폴더 내에 존재해야 하는 파일의 이름 목록.
+
+    Returns:
+        None
+    """
+    incomplete_dirs = check_incomplete_logs(base_path, required_files)
+
+    for dir_name in incomplete_dirs:
+        dir_path = os.path.join(base_path, dir_name)
+        shutil.rmtree(dir_path)
+        print(f"Deleted incomplete directory: {dir_path}")

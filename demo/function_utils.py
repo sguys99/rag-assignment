@@ -6,7 +6,6 @@ from io import BytesIO
 from time import time
 from typing import Any
 
-import mammoth
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
@@ -189,57 +188,56 @@ class ChatCallbackHandler(BaseCallbackHandler):
 #     return retriever
 
 
-# @st.cache_resource(show_spinner="Loading vectorstore...")
-# def load_retriver(
-#     db_path: str,
-#     embedding_model="text-embedding-3-large",
-#     retriever_k: int = 4,
-#     base_url: str = "10.99.16.87:11434",
-# ):
-#     """
-#     로컬에서 저장된 벡터스토어를 불러와 리트리버를 생성하는 함수.
+@st.cache_resource(show_spinner="Loading vectorstore...")
+def load_retriver(
+    db_path: str,
+    embedding_model="gemini-embedding-001",
+    retriever_k: int = 4,
+):
+    """
+    로컬에서 저장된 벡터스토어를 불러와 리트리버를 생성하는 함수.
 
-#     주어진 경로에 있는 벡터스토어를 로드하고, 지정된 임베딩 모델을 사용해 검색 가능한 리트리버 객체를 생성.
-#     리트리버는 유사성 검색 방식을 사용하며, 검색 결과로 반환되는 문서의 수는 `retriever_k` 값으로 설정.
+    주어진 경로에 있는 벡터스토어를 로드하고, 지정된 임베딩 모델을 사용해 검색 가능한 리트리버 객체를 생성.
+    리트리버는 유사성 검색 방식을 사용하며, 검색 결과로 반환되는 문서의 수는 `retriever_k` 값으로 설정.
 
-#     Args:
-#         db_path (str): 로컬 벡터스토어가 저장된 경로.
-#         embedding_model (str, optional): 사용할 임베딩 모델의 이름. 기본값은 "text-embedding-3-large".
-#         retriever_k (int, optional): 검색 시 반환할 문서의 최대 개수. 기본값은 4.
-#         base_url (str, optional): Locall LLM 사용시 서버 주소. 기본값은 "10.99.15.72:11434"
+    Args:
+        db_path (str): 로컬 벡터스토어가 저장된 경로.
+        embedding_model (str, optional): 사용할 임베딩 모델의 이름. 기본값은 "text-embedding-3-large".
+        retriever_k (int, optional): 검색 시 반환할 문서의 최대 개수. 기본값은 4.
+        base_url (str, optional): Locall LLM 사용시 서버 주소. 기본값은 "10.99.15.72:11434"
 
-#     Returns:
-#         retriever: 검색 가능한 리트리버 객체.
-#     """
-#     embeddings = get_embedding(model=embedding_model, base_url=base_url)
-#     vectorstore = FAISS.load_local(db_path, embeddings=embeddings, allow_dangerous_deserialization=True)
-#     retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": retriever_k})
-#     return retriever
+    Returns:
+        retriever: 검색 가능한 리트리버 객체.
+    """
+    embeddings = get_embedding(model=embedding_model)
+    vectorstore = FAISS.load_local(db_path, embeddings=embeddings, allow_dangerous_deserialization=True)
+    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": retriever_k})
+    return retriever
 
 
-# @st.dialog("로그 삭제")
-# def delete_log(selected_log_path: str) -> None:
-#     """
-#     선택한 로그를 삭제하는 함수.
+@st.dialog("로그 삭제")
+def delete_log(selected_log_path: str) -> None:
+    """
+    선택한 로그를 삭제하는 함수.
 
-#     사용자는 주어진 경로에 있는 로그 삭제를 확인.
-#     삭제 버튼을 클릭하면 지정된 경로의 로그가 삭제.
-#     삭제 과정에서 오류가 발생할 경우, 오류 메시지가 표시.
+    사용자는 주어진 경로에 있는 로그 삭제를 확인.
+    삭제 버튼을 클릭하면 지정된 경로의 로그가 삭제.
+    삭제 과정에서 오류가 발생할 경우, 오류 메시지가 표시.
 
-#     Args:
-#         selected_log_path (str): 삭제할 로그가 위치한 파일 경로.
-#     """
-#     st.write(f"`{selected_log_path.as_posix().split('/')[-1]}`")
-#     st.write("위 경로의 모델을 삭제합니까?")
-#     if st.button("삭제"):
-#         try:
-#             shutil.rmtree(selected_log_path)
-#             st.success(f"모델 '{selected_log_path.as_posix().split('/')[-1]}'이 삭제되었습니다.")
-#             time.sleep(1)
-#             st.rerun()
-#         except Exception as e:
-#             st.error(f"모델 삭제 중 오류가 발생했습니다: {str(e)}")
-#         st.rerun()
+    Args:
+        selected_log_path (str): 삭제할 로그가 위치한 파일 경로.
+    """
+    st.write(f"`{selected_log_path.as_posix().split('/')[-1]}`")
+    st.write("위 경로의 설정을 삭제합니까?")
+    if st.button("삭제"):
+        try:
+            shutil.rmtree(selected_log_path)
+            st.success(f"설정 '{selected_log_path.as_posix().split('/')[-1]}'이 삭제되었습니다.")
+            time.sleep(1)
+            st.rerun()
+        except Exception as e:
+            st.error(f"설정 삭제 중 오류가 발생했습니다: {str(e)}")
+        st.rerun()
 
 
 def save_message(message: str, role: str) -> None:
