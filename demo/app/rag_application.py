@@ -199,11 +199,12 @@ with col12:
                     format_docs_func=format_docs_with_meta,
                 )
 
-                with st.chat_message("ai", avatar=ai_avatar_image):
-                    content = chain.invoke(message)
-                    print(content)
-                    memory.save_context({"input": message}, {"output": content})
-                    st.session_state["memory"] = memory
+                content = chain.invoke(message)
+                print(content)
+
+                memory.save_context({"input": message}, {"output": content})
+                st.session_state["memory"] = memory
+                send_message(content, "ai")
         else:
             st.session_state["messages"] = []
             st.session_state["rag_qa_on"] = False
