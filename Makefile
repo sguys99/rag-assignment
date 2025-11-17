@@ -9,7 +9,7 @@ init: ## Init env
 	@echo "→ Activate with: source .venv/bin/activate"
 
 init-dev:  ## Init dev env
-	uv python pin 3.12.9
+	uv python pin 3.12.12
 	uv venv .venv
 	uv sync --all-extras --dev
 	rm -f .git/hooks/pre-commit && rm -f .git/hooks/pre-commit.legacy
