@@ -10,7 +10,7 @@ if "login" not in st.session_state:
 
 
 st.set_page_config(
-    page_title="flex ML Project Service Demo page",
+    page_title="Whisky Recommendation Service Demo page",
     page_icon=Image.open("../img/logo-circle.png"),
     layout="wide",
 )
@@ -28,38 +28,24 @@ home = st.Page(
 )
 
 
-app1_1 = st.Page(
-    "app1/app1-1.py",
-    title="App 1-1",
+rag_settings = st.Page(
+    "app/rag_settings.py",
+    title="Settings",
+    icon=":material/settings:",
+)
+
+rag_application = st.Page(
+    "app/rag_application.py",
+    title="Application",
     icon=":material/smart_toy:",
 )
-
-app1_2 = st.Page(
-    "app1/app1-2.py",
-    title="App 1-2",
-    icon=":material/smart_toy:",
-)
-
-app2_1 = st.Page(
-    "app2/app2-1.py",
-    title="App 2-1",
-    icon=":material/monitoring:",
-)
-
-app2_2 = st.Page(
-    "app2/app2-2.py",
-    title="App 2-2",
-    icon=":material/monitoring:",
-)
-
 
 if st.session_state["login"]:
     pg = st.navigation(
         {
             "⚙️ Logout": [logout_page],
-            "0️⃣ Home": [home],
-            "1️⃣ Application1": [app1_1, app1_2],
-            "2️⃣ Application2": [app2_1, app2_2],
+            "1️⃣ Home": [home],
+            "2️⃣ Whisky RAG Service": [rag_settings, rag_application],
         },
     )
 else:
