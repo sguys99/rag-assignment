@@ -2,7 +2,7 @@ from typing import Any
 
 import yaml
 
-from my_ml.utils.path import DATA_CONFIG_PATH
+from rag_pkg.utils.path import DATA_CONFIG_PATH
 
 
 def load_config(path: str) -> dict[str, Any]:
@@ -34,3 +34,32 @@ def load_all_configs(data_type="HPMC"):
     }
 
     return configs
+
+
+def load_yaml(file_path: str) -> dict:
+    """
+    YAML 파일을 로드하여 파이썬 딕셔너리로 반환하는 함수.
+
+    Args:
+        file_path (str): 로드할 YAML 파일의 경로.
+
+    Returns:
+        dict: YAML 파일의 내용을 담은 파이썬 딕셔너리 객체.
+    """
+    with open(file_path, "r", encoding="utf-8") as file:
+        return yaml.safe_load(file)
+
+
+def dump_yaml(file_path: str) -> None:
+    """
+    파이썬 딕셔너리를 YAML 형식으로 지정된 파일에 덤프하는 함수.
+
+    Args:
+        file_path (str): 덤프할 YAML 파일의 경로.
+
+    Returns:
+        None
+    """
+    return yaml.dump(file_path, sort_keys=False, allow_unicode=True)
+
+
