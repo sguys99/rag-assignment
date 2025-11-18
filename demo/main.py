@@ -10,7 +10,7 @@ if "login" not in st.session_state:
 
 
 st.set_page_config(
-    page_title="Whisky Recommendation Service Demo page",
+    page_title="Whisky AI",
     page_icon=Image.open("../img/logo-circle.png"),
     layout="wide",
 )
