@@ -1,23 +1,20 @@
 import os
 import streamlit as st
 from dotenv import load_dotenv
-from function_utils import (
-    read_file_data, 
-    load_image, 
-    pain_history,
-    send_message,
-    load_retriver,
-    ChatCallbackHandler)
-from langchain_core.prompts import load_prompt
-from langchain_classic.memory import ConversationBufferWindowMemory
-from rag_pkg.utils.path import LOG_PATH, DEMO_IMG_PATH
-from rag_pkg.utils.config_loader import dump_yaml, load_yaml
-from rag_pkg.utils.rag_utils import delete_incomplete_logs, format_docs_with_meta
-from rag_pkg.module.models import get_llm
-from rag_pkg.chains import build_simple_chain
 
 load_dotenv()
 
+# 가벼운 utils만 먼저 import
+from rag_pkg.utils.path import LOG_PATH, DEMO_IMG_PATH
+from rag_pkg.utils.config_loader import dump_yaml, load_yaml
+from rag_pkg.utils.rag_utils import delete_incomplete_logs
+
+# 무거운 imports는 함수 내부에서 lazy loading
+
+def load_image(image_path):
+    """이미지 파일을 읽어서 바이트로 반환"""
+    with open(image_path, "rb") as f:
+        return f.read()
 
 human_avatar = DEMO_IMG_PATH / "man-icon.png"
 ai_avartar = DEMO_IMG_PATH / "vessel-icon.png"
@@ -29,6 +26,7 @@ delete_incomplete_logs(base_path=LOG_PATH, required_files=["prompt.yaml", "rag_c
 
 
 if "memory" not in st.session_state:
+    from langchain_classic.memory import ConversationBufferWindowMemory
     st.session_state["memory"] = ConversationBufferWindowMemory(
         return_messages=True,
         k=3,
@@ -118,6 +116,7 @@ with st.sidebar:
             build_bot_btn = st.toggle("Build bot", key="build_bot", disabled=not logs)
 
         if build_bot_btn:
+            from langchain_core.prompts import load_prompt
             selected_data_path = selected_log_path / "data"
             selected_db_path = selected_log_path / "db"
             selected_prompt_path = selected_log_path / "prompt.yaml"
@@ -126,6 +125,9 @@ with st.sidebar:
             st.session_state["retriever_k"] = retriever_k
             st.session_state["selected_rag_llm"] = "gemini-2.5-flash-lite"
             st.session_state["rag_qa_on"] = True
+            st.session_state["prompt"] = prompt
+            st.session_state["selected_data_path"] = selected_data_path
+            st.session_state["selected_db_path"] = selected_db_path
             st.success("Setting complete!")
         else:
             st.session_state["rag_qa_on"] = False
@@ -143,8 +145,8 @@ with col11:
     st.write("**:blue[1.Datasets]**")
     with st.container(height=700):
         if st.session_state["rag_qa_on"] and selected_rag_config:
-            
-            data_path = selected_data_path / selected_rag_config["document"]
+            from function_utils import read_file_data
+            data_path = st.session_state["selected_data_path"] / selected_rag_config["document"]
 
             csv_df = read_file_data(data_path)
             st.write(
@@ -160,42 +162,56 @@ with col12:
     )
     with st.container(height=700):
         if st.session_state["rag_qa_on"] and selected_rag_config:
-            llm = get_llm(
-                model=st.session_state["selected_rag_llm"],
-                temperature=st.session_state["llm_temp"],
-                # callbacks=[ChatCallbackHandler()],
-            )
-            
-            retriever = load_retriver(
-                db_path=selected_db_path,
-                embedding_model = selected_rag_config["embedding"],
-                retriever_k=st.session_state["retriever_k"]
-            )
-            
+            # Lazy import - 필요할 때만 로드
+            from function_utils import send_message, pain_history, load_retriver
+            from rag_pkg.module.models import get_llm
+            from rag_pkg.chains import build_simple_chain
+            from rag_pkg.utils.rag_utils import format_docs_with_meta
+
+            # LLM과 Retriever를 session_state에 캐싱
+            if "llm" not in st.session_state or "retriever" not in st.session_state:
+                llm = get_llm(
+                    model=st.session_state["selected_rag_llm"],
+                    temperature=st.session_state["llm_temp"],
+                )
+                retriever = load_retriver(
+                    db_path=st.session_state["selected_db_path"],
+                    embedding_model=selected_rag_config["embedding"],
+                    retriever_k=st.session_state["retriever_k"]
+                )
+                st.session_state["llm"] = llm
+                st.session_state["retriever"] = retriever
+            else:
+                llm = st.session_state["llm"]
+                retriever = st.session_state["retriever"]
+
             send_message("선호하는 위스키에 대해서 물어보세요!", "ai", save=False)
             pain_history()
 
             with st._bottom:
                 _, col122 = st.columns([1, 1])
                 with col122:
-                    message = st.chat_input("여기에 질문을 입력하세요....")            
-                    
+                    message = st.chat_input("여기에 질문을 입력하세요....")
+
             if message:
                 send_message(message, "human")
                 chain = build_simple_chain(
                     retriever=retriever,
-                    prompt=prompt,
+                    prompt=st.session_state["prompt"],
                     llm=llm,
                     load_memory_func=load_memory,
                     format_docs_func=format_docs_with_meta,
                 )
 
-                content = chain.invoke(message)
-                print(content)
+                # 스트리밍 응답 수집
+                full_response = ""
+                for chunk in chain.stream(message):
+                    full_response += chunk
 
-                memory.save_context({"input": message}, {"output": content})
+                print(full_response)
+                memory.save_context({"input": message}, {"output": full_response})
                 st.session_state["memory"] = memory
-                send_message(content, "ai")
+                send_message(full_response, "ai", stream=True)
         else:
             st.session_state["messages"] = []
             st.session_state["rag_qa_on"] = False

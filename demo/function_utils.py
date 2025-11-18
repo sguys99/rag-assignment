@@ -105,11 +105,15 @@ def save_message(message: str, role: str) -> None:
     st.session_state["messages"].append({"message": message, "role": role})
 
 
-def send_message(message: str, role: str, save: bool = True) -> None:
+def send_message(message: str, role: str, save: bool = True, stream: bool = False) -> None:
     avatar_image = load_image(ai_avartar if role == "ai" else human_avatar)
 
     with st.chat_message(role, avatar=avatar_image):
-        st.markdown(message)
+        if stream and role == "ai":
+            # 스트리밍 효과를 위한 write_stream 사용
+            st.write_stream((char for char in message))
+        else:
+            st.markdown(message)
 
     if save:
         save_message(message, role)
