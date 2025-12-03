@@ -6,9 +6,11 @@ from langchain_pinecone import PineconeEmbeddings
 
 
 def get_embedding(
-    model: str = "gemini",
-) -> Union[OpenAIEmbeddings, GoogleGenerativeAIEmbeddings]:
-    if model.lower().startswith("gemini"):
+    model: str = "text-embedding-3-small",
+) -> Union[OpenAIEmbeddings, GoogleGenerativeAIEmbeddings, PineconeEmbeddings]:
+    if model.lower().startswith("text-embedding"):
+        embedding = OpenAIEmbeddings(model=model)
+    elif model.lower().startswith("gemini"):
         embedding = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001")
     elif model.lower().startswith("pinecone"):
         embedding = PineconeEmbeddings(model="multilingual-e5-large")
@@ -19,11 +21,11 @@ def get_embedding(
 
 
 def get_llm(
-    model: str = "gemini-2.5-flash-lite",
+    model: str = "gpt-4o-mini",
     temperature: float = 0.2,
     callbacks: List = [],
 ) -> Union[ChatOpenAI, GoogleGenerativeAI]:
-    if model.startswith("gpt"):
+    if model.startswith("gpt") or model.startswith("o1"):
         llm = ChatOpenAI(model=model, temperature=temperature, callbacks=callbacks)
     elif model.startswith("gemini"):
         llm = GoogleGenerativeAI(
