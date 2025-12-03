@@ -1,9 +1,7 @@
 import os
-import re
 import shutil
-from typing import List, Optional
+from typing import List
 
-import pandas as pd
 import yaml
 from langchain_core.documents import Document
 
@@ -19,24 +17,24 @@ def format_docs_with_meta(docs: List[Document]) -> str:
         parts = []
 
         # Whisky 이름 추가
-        if 'whisky_name' in doc.metadata:
+        if "whisky_name" in doc.metadata:
             parts.append(f"[Whisky: {doc.metadata['whisky_name']}]")
 
         # Link 추가
-        if 'link' in doc.metadata:
+        if "link" in doc.metadata:
             parts.append(f"Link: {doc.metadata['link']}")
 
         # Tags 추가
-        if 'tags' in doc.metadata:
+        if "tags" in doc.metadata:
             parts.append(f"Tags: {doc.metadata['tags']}")
 
         # Scores 추가
         scores = []
-        if 'nose_score' in doc.metadata:
+        if "nose_score" in doc.metadata:
             scores.append(f"Nose Score: {doc.metadata['nose_score']}")
-        if 'taste_score' in doc.metadata:
+        if "taste_score" in doc.metadata:
             scores.append(f"Taste Score: {doc.metadata['taste_score']}")
-        if 'finish_score' in doc.metadata:
+        if "finish_score" in doc.metadata:
             scores.append(f"Finish Score: {doc.metadata['finish_score']}")
 
         if scores:
@@ -61,9 +59,8 @@ def save_rag_configs(
     document_format: str,
     document: List[str],
     vectorstore_type: str = "FAISS",
-    embedding_type: str = "gemini-embedding-001",
+    embedding_type: str = "text-embedding-3-small",
 ) -> None:
-    
     config = {
         "document_format": document_format,
         "document": document,
@@ -76,17 +73,17 @@ def save_rag_configs(
 
 
 def check_incomplete_logs(base_path: str, required_files: List[str]) -> List[str]:
-
     return [
         f
         for f in os.listdir(base_path)
         if os.path.isdir(os.path.join(base_path, f))
-        and not all(os.path.exists(os.path.join(base_path, f, file)) for file in required_files)
+        and not all(
+            os.path.exists(os.path.join(base_path, f, file)) for file in required_files
+        )
     ]
 
 
 def delete_incomplete_logs(base_path: str, required_files: List[str]) -> None:
-
     incomplete_dirs = check_incomplete_logs(base_path, required_files)
 
     for dir_name in incomplete_dirs:

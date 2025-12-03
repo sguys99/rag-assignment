@@ -18,7 +18,10 @@ from rag_pkg.module.models import get_embedding
 load_dotenv()
 
 os.makedirs(LOG_PATH, exist_ok=True)
-delete_incomplete_logs(base_path=LOG_PATH, required_files=["prompt.yaml", "rag_config.yaml"])
+delete_incomplete_logs(
+    base_path=LOG_PATH,
+    required_files=["prompt.yaml", "rag_config.yaml"],
+)
 
 if "rag_name" not in st.session_state:
     current_datetime = datetime.now().strftime("%y%m%d_%H%M%S")
@@ -44,9 +47,7 @@ with st.sidebar:
         accept_multiple_files=False,
     )
 
-    logs = [
-        f for f in os.listdir(LOG_PATH) if os.path.isdir(os.path.join(LOG_PATH, f))
-    ]
+    logs = [f for f in os.listdir(LOG_PATH) if os.path.isdir(os.path.join(LOG_PATH, f))]
 
     if not logs:
         st.error("저장된 항목이 없습니다.")
@@ -78,7 +79,7 @@ with st.sidebar:
             if selected_log:
                 delete_log(selected_log_path)
             else:
-                st.warning("삭제할 RAG 설정을 선택해주세요.")        
+                st.warning("삭제할 RAG 설정을 선택해주세요.")
 
 st.title(":gear: RAG Settings")
 st.caption("RAG Chain을 위한 구성요소를 설정합니다.")
@@ -94,12 +95,12 @@ with col11:
 
             csv_df = read_file_data(csv_file)
             st.write(
-                    f"**`{st.session_state['uploaded_file'].name}`**, `size({csv_df.shape[0]} x {csv_df.shape[1]})`",
+                f"**`{st.session_state['uploaded_file'].name}`**, `size({csv_df.shape[0]} x {csv_df.shape[1]})`",
             )
             st.dataframe(csv_df, height=540)
         else:
             st.write("데이터를 업로드하면 여기에 표시됩니다.")
-            
+
 with col12:
     st.write("**:blue[2.Prompt settings]**")
     with st.container(height=700):
@@ -122,7 +123,8 @@ with col12:
                 )
 
             prompt_template = load_prompt(
-                PROMPT_CONFIG_PATH / f"{st.session_state['selected_system_prompt']}.yaml",
+                PROMPT_CONFIG_PATH
+                / f"{st.session_state['selected_system_prompt']}.yaml",
                 encoding="utf-8",
             )
             system_prompt = prompt_template.template
@@ -145,7 +147,9 @@ with col12:
             with col122:
                 st.session_state["selected_example"] = st.selectbox(
                     label="Fewshot template 선택",
-                    options=["fewshot_template",],
+                    options=[
+                        "fewshot_template",
+                    ],
                     index=["fewshot_template"].index(
                         st.session_state["selected_example"],
                     ),
@@ -173,10 +177,12 @@ with col12:
             st.session_state["use_example"] = use_example_check
             st.session_state["prompt"] = build_qa_prompt(
                 system_message=edited_message,
-                examples=yaml.safe_load(few_shot_msg) if st.session_state["use_example"] else None,
+                examples=yaml.safe_load(few_shot_msg)
+                if st.session_state["use_example"]
+                else None,
             )
             st.success("프롬프트 생성완료!")
-            
+
 with col13:
     st.write("**:blue[3.Vector DB settings]**")
     with st.container(height=700):
@@ -191,25 +197,28 @@ with col13:
             )
         else:
             st.info("문서를 업로드 하세요.")
-            
+
         st.write(" ")
         rag_name_input = st.text_input(
             "RAG 이름",
             value=st.session_state["rag_name"],
             help="저장할 RAG 이름을 지정하세요.",
         )
-        
+
         st.write(" ")
         if st.button(label="Save settings"):
             if check_korean(rag_name_input):
                 st.warning("영문 이름을 사용하세요.")
 
-            elif "uploaded_file" not in st.session_state or not st.session_state["uploaded_file"]:
+            elif (
+                "uploaded_file" not in st.session_state
+                or not st.session_state["uploaded_file"]
+            ):
                 st.warning("문서를 업로드해주세요")
 
             elif "prompt" not in st.session_state or not st.session_state["prompt"]:
                 st.warning("prompt를 생성해주세요.")
-                
+
             else:
                 status = st.status("Saving RAG settings...", expanded=True)
                 time.sleep(0.5)
@@ -220,43 +229,48 @@ with col13:
                 db_path = dir_path / "db"
                 os.makedirs(dir_path, exist_ok=True)
                 os.makedirs(data_path, exist_ok=True)
-                time.sleep(0.5)     
-                
+                time.sleep(0.5)
+
                 status.write("**`Loading the csv file...`**")
                 file_path = data_path / f"{st.session_state["uploaded_file"].name}"
                 with open(file_path, "wb") as f:
                     f.write(st.session_state["uploaded_file"].getvalue())
-                    
+
                 csv_df_processed = preprocess_for_rag(csv_df, min_comments=2)
                 documents = load_documents(
                     df=csv_df_processed,
-                    document_text_col="document_text"
-                    )
-                    
-                    
+                    document_text_col="document_text",
+                )
+
                 status.write("**`Setting the Vector Store....`**")
-                embedding = get_embedding(model = "gemini")
+                embedding = get_embedding(model="text-embedding-3-small")
                 vectorstore = get_vector_store(
-                    documents = documents,
+                    documents=documents,
                     embedding=embedding,
-                    type = "faiss",
-                    dimension=3072
-                    )
+                    type="faiss",
+                    dimension=3072,
+                )
                 vectorstore.save_local(folder_path=db_path)
-                
+
                 status.write("**`Saving the configs....`**")
 
                 if st.session_state["use_example"]:
-                    save_fewshot_prompt(prompt=st.session_state["prompt"], save_path=prompt_path)
+                    save_fewshot_prompt(
+                        prompt=st.session_state["prompt"],
+                        save_path=prompt_path,
+                    )
                 else:
-                    save_prompt(prompt=st.session_state["prompt"], save_path=prompt_path)
-                    
+                    save_prompt(
+                        prompt=st.session_state["prompt"],
+                        save_path=prompt_path,
+                    )
+
                 save_rag_configs(
                     save_path=dir_path / "rag_config.yaml",
                     document_format="csv",
                     document=data_name,
                     vectorstore_type="FAISS",
-                    embedding_type="gemini-embedding-001",
+                    embedding_type="text-embedding-3-small",
                 )
                 status.update(
                     label="**:blue[RAG 설정 저장 완료.]**",
@@ -270,4 +284,4 @@ with col13:
                     if key in st.session_state:
                         del st.session_state[key]
                 gc.collect()
-                st.rerun()                
+                st.rerun()

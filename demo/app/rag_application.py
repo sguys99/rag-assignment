@@ -1,20 +1,20 @@
 import os
 import streamlit as st
 from dotenv import load_dotenv
-
-load_dotenv()
-
-# 가벼운 utils만 먼저 import
 from rag_pkg.utils.path import LOG_PATH, DEMO_IMG_PATH
 from rag_pkg.utils.config_loader import dump_yaml, load_yaml
 from rag_pkg.utils.rag_utils import delete_incomplete_logs
 
+load_dotenv()
+
 # 무거운 imports는 함수 내부에서 lazy loading
+
 
 def load_image(image_path):
     """이미지 파일을 읽어서 바이트로 반환"""
     with open(image_path, "rb") as f:
         return f.read()
+
 
 human_avatar = DEMO_IMG_PATH / "man-icon.png"
 ai_avartar = DEMO_IMG_PATH / "vessel-icon.png"
@@ -22,11 +22,15 @@ ai_avatar_image = load_image(ai_avartar)
 
 
 os.makedirs(LOG_PATH, exist_ok=True)
-delete_incomplete_logs(base_path=LOG_PATH, required_files=["prompt.yaml", "rag_config.yaml"])
+delete_incomplete_logs(
+    base_path=LOG_PATH,
+    required_files=["prompt.yaml", "rag_config.yaml"],
+)
 
 
 if "memory" not in st.session_state:
     from langchain_classic.memory import ConversationBufferWindowMemory
+
     st.session_state["memory"] = ConversationBufferWindowMemory(
         return_messages=True,
         k=3,
@@ -34,6 +38,7 @@ if "memory" not in st.session_state:
     )
 
 memory = st.session_state["memory"]
+
 
 def load_memory(_):
     return memory.load_memory_variables({})["chat_history"]
@@ -86,13 +91,12 @@ with st.sidebar:
             llm_type = st.radio(
                 "LLM",
                 [
-                    "gemini-2.5-flash-lite",
+                    "gpt-4o-mini",
                 ],
                 horizontal=True,
                 disabled=st.session_state["rag_qa_on"],
                 help="사용할 LLM을 선택하세요.",
             )
-
 
         col1, col2, _ = st.columns((3, 3, 0.5))
 
@@ -117,13 +121,14 @@ with st.sidebar:
 
         if build_bot_btn:
             from langchain_core.prompts import load_prompt
+
             selected_data_path = selected_log_path / "data"
             selected_db_path = selected_log_path / "db"
             selected_prompt_path = selected_log_path / "prompt.yaml"
             prompt = load_prompt(selected_log_path / "prompt.yaml", encoding="utf-8")
             st.session_state["llm_temp"] = llm_temperature
             st.session_state["retriever_k"] = retriever_k
-            st.session_state["selected_rag_llm"] = "gemini-2.5-flash-lite"
+            st.session_state["selected_rag_llm"] = "gpt-4o-mini"
             st.session_state["rag_qa_on"] = True
             st.session_state["prompt"] = prompt
             st.session_state["selected_data_path"] = selected_data_path
@@ -146,16 +151,19 @@ with col11:
     with st.container(height=700):
         if st.session_state["rag_qa_on"] and selected_rag_config:
             from function_utils import read_file_data
-            data_path = st.session_state["selected_data_path"] / selected_rag_config["document"]
+
+            data_path = (
+                st.session_state["selected_data_path"] / selected_rag_config["document"]
+            )
 
             csv_df = read_file_data(data_path)
             st.write(
-                    f"**`{selected_rag_config["document"]}`**, `size({csv_df.shape[0]} x {csv_df.shape[1]})`",
+                f"**`{selected_rag_config["document"]}`**, `size({csv_df.shape[0]} x {csv_df.shape[1]})`",
             )
             st.dataframe(csv_df, height=540)
         else:
             st.write("`Build bot`을 toggle하면 문서가 표시됩니다.")
-            
+
 with col12:
     st.write(
         f"**:blue[RAG name :]** `{selected_log}` , **:blue[LLM Temp. :]** `{st.session_state['llm_temp']}`, **:blue[Retriever K :]** `{st.session_state['retriever_k']}`",
@@ -177,7 +185,7 @@ with col12:
                 retriever = load_retriver(
                     db_path=st.session_state["selected_db_path"],
                     embedding_model=selected_rag_config["embedding"],
-                    retriever_k=st.session_state["retriever_k"]
+                    retriever_k=st.session_state["retriever_k"],
                 )
                 st.session_state["llm"] = llm
                 st.session_state["retriever"] = retriever
