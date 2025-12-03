@@ -171,7 +171,13 @@ with col12:
     with st.container(height=700):
         if st.session_state["rag_qa_on"] and selected_rag_config:
             # Lazy import - 필요할 때만 로드
-            from function_utils import send_message, pain_history, load_retriver
+            from function_utils import (
+                send_message,
+                pain_history,
+                load_retriver,
+                save_message,
+                load_image,
+            )
             from rag_pkg.module.models import get_llm
             from rag_pkg.chains import build_simple_chain
             from rag_pkg.utils.rag_utils import format_docs_with_meta
@@ -211,15 +217,20 @@ with col12:
                     format_docs_func=format_docs_with_meta,
                 )
 
-                # 스트리밍 응답 수집
-                full_response = ""
-                for chunk in chain.stream(message):
-                    full_response += chunk
+                # 스트리밍 응답 실시간 출력
+                avatar_image = load_image(ai_avartar)
+                with st.chat_message("ai", avatar=avatar_image):
+                    response = st.write_stream(chain.stream(message))
+
+                # response를 문자열로 변환
+                full_response = (
+                    "".join(response) if isinstance(response, list) else response
+                )
 
                 print(full_response)
                 memory.save_context({"input": message}, {"output": full_response})
                 st.session_state["memory"] = memory
-                send_message(full_response, "ai", stream=True)
+                save_message(full_response, "ai")
         else:
             st.session_state["messages"] = []
             st.session_state["rag_qa_on"] = False

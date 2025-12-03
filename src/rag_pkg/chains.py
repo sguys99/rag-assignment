@@ -1,6 +1,6 @@
 from typing import Callable, List
 
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough, Runnable
 from langchain_core.output_parsers import StrOutputParser
 
 from rag_pkg.utils.rag_utils import format_docs
@@ -12,7 +12,7 @@ def build_simple_chain(
     llm: Callable,
     load_memory_func: Callable[[], str],
     format_docs_func: Callable[[List], str] = format_docs,
-) -> Callable:
+) -> Runnable:
     chain = (
         {
             "context": retriever | RunnableLambda(format_docs_func),
